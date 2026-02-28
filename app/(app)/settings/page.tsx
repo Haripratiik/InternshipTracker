@@ -48,10 +48,24 @@ export default function SettingsPage() {
     setScrapeResult(null);
     try {
       const res = await fetch("/api/scrape", { method: "POST" });
-      const data = await res.json() as { totalNew?: number; errors?: string[] };
-      setScrapeResult(`Done — ${data.totalNew ?? 0} new jobs found.${data.errors?.length ? ` Errors: ${data.errors.join(", ")}` : ""}`);
-    } catch {
-      setScrapeResult("Scrape failed. Check Vercel logs.");
+      const text = await res.text();
+      if (!res.ok) {
+        setScrapeResult(`Error ${res.status}: ${text.slice(0, 300)}`);
+        return;
+      }
+      let data: { totalNew?: number; errors?: string[] };
+      try {
+        data = JSON.parse(text) as { totalNew?: number; errors?: string[] };
+      } catch {
+        setScrapeResult(`Bad response (not JSON): ${text.slice(0, 200)}`);
+        return;
+      }
+      setScrapeResult(
+        `Done — ${data.totalNew ?? 0} new jobs found.` +
+        (data.errors?.length ? ` Errors: ${data.errors.slice(0, 3).join(" | ")}` : "")
+      );
+    } catch (e) {
+      setScrapeResult(`Request failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setScraping(false);
     }
