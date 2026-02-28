@@ -136,6 +136,9 @@ export default function DiscoveryPage() {
                 <p className="text-xs text-muted-foreground line-clamp-2">{job.relevanceReason}</p>
               )}
               <div className="mt-auto flex flex-wrap gap-2 pt-2">
+                <a href={job.url} target="_blank" rel="noreferrer">
+                  <Button size="sm" variant="secondary">View Job ↗</Button>
+                </a>
                 <Button size="sm" onClick={() => handleSave(job.id)} disabled={job.status === "SAVED"}>
                   {job.status === "SAVED" ? "Saved" : "Save"}
                 </Button>
