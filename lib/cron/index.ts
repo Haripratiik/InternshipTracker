@@ -61,6 +61,7 @@ async function runAllScrapers(): Promise<{ source: string; jobsFound: number; er
             relevanceReason: reason,
             status: "DISCOVERED" as JobStatus,
             notes: null,
+            contacts: [],
             rawHtml: j.rawHtml ?? null,
           });
         } catch (e) {

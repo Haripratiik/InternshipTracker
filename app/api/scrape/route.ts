@@ -47,6 +47,7 @@ export async function POST() {
           relevanceReason: reason,
           status: "DISCOVERED" as JobStatus,
           notes: null,
+          contacts: [],
           rawHtml: j.rawHtml ?? null,
         });
         totalNew++;

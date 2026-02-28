@@ -29,7 +29,10 @@ export async function POST(request: Request) {
     const pdfRes = await fetch(downloadUrl);
     if (pdfRes.ok) {
       const buffer = Buffer.from(await pdfRes.arrayBuffer());
-      const pdfParse = (await import("pdf-parse")).default;
+      // pdf-parse has inconsistent ESM/CJS exports; cast to callable
+      type PdfParseFn = (buf: Buffer) => Promise<{ text: string }>;
+      const pdfModule = await import("pdf-parse") as unknown as { default?: PdfParseFn } | PdfParseFn;
+      const pdfParse: PdfParseFn = typeof pdfModule === "function" ? pdfModule : (pdfModule as { default: PdfParseFn }).default;
       const parsed = await pdfParse(buffer);
       extractedText = parsed.text ?? "";
     }
