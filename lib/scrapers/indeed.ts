@@ -24,8 +24,16 @@ async function fetchHtml(url: string): Promise<string> {
 }
 
 function buildQueries(): string[] {
-  const roles = USER_PROFILE.targetRoles.slice(0, 5);
-  return roles.map((r) => `${encodeURIComponent(r)} intern`);
+  const roleQueries = USER_PROFILE.targetRoles.slice(0, 5).map((r) => encodeURIComponent(r));
+  const broadQueries = [
+    "machine+learning+intern",
+    "software+engineering+intern",
+    "physics+intern",
+    "research+intern",
+    "data+science+intern",
+    "computational+intern",
+  ];
+  return [...roleQueries, ...broadQueries];
 }
 
 export async function scrapeIndeed(): Promise<ScraperResult> {

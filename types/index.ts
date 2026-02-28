@@ -58,6 +58,15 @@ export const JOB_SOURCES = [
 
 export type JobSource = (typeof JOB_SOURCES)[number];
 
+export interface FirestoreResume {
+  id: string;
+  name: string;
+  storagePath: string;
+  downloadUrl: string;
+  extractedText: string;
+  uploadedAt: Date;
+}
+
 export const ROLE_CATEGORIES = [
   "quant",
   "fusion",

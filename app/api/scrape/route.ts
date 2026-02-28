@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { getJobByUrl, createJob, createScrapeLog } from "@/lib/db";
-import { scrapeGitHubRepos, scrapeSimplify } from "@/lib/scrapers";
+import {
+  scrapeGitHubRepos,
+  scrapeSimplify,
+  scrapeLevelsFyi,
+  scrapeIndeed,
+} from "@/lib/scrapers";
 import { scoreJobRelevance } from "@/lib/ai/relevance";
 import type { JobStatus } from "@/types";
 
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 export async function POST() {
   const errors: string[] = [];
@@ -13,6 +18,8 @@ export async function POST() {
   for (const { name, fn } of [
     { name: "github_repo", fn: scrapeGitHubRepos },
     { name: "simplify", fn: scrapeSimplify },
+    { name: "levels_fyi", fn: scrapeLevelsFyi },
+    { name: "indeed", fn: scrapeIndeed },
   ]) {
     try {
       const { jobs, errors: e } = await fn();

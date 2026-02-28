@@ -1,7 +1,7 @@
 import { getApps, initializeApp, getApp } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import * as admin from "firebase-admin";
-import type { JobStatus } from "@/types";
+import type { JobStatus, FirestoreResume } from "@/types";
 
 export interface FirestoreJob {
   id: string;
@@ -19,6 +19,7 @@ export interface FirestoreJob {
   relevanceReason: string | null;
   status: JobStatus;
   notes: string | null;
+  contacts: string[];
   rawHtml: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -81,6 +82,7 @@ function docToJob(id: string, data: Record<string, unknown>): FirestoreJob {
     relevanceReason: (data.relevanceReason as string) ?? null,
     status: ((data.status as JobStatus) ?? "DISCOVERED") as JobStatus,
     notes: (data.notes as string | null) ?? null,
+    contacts: Array.isArray(data.contacts) ? (data.contacts as string[]) : [],
     rawHtml: (data.rawHtml as string | null) ?? null,
     createdAt: toDate(data.createdAt) ?? new Date(),
     updatedAt: toDate(data.updatedAt) ?? new Date(),
@@ -127,7 +129,7 @@ export async function getJobById(id: string): Promise<FirestoreJob | null> {
   return docToJob(d.id, d.data() ?? {});
 }
 
-export async function createJob(data: Omit<FirestoreJob, "id" | "createdAt" | "updatedAt">): Promise<string> {
+export async function createJob(data: Omit<FirestoreJob, "id" | "createdAt" | "updatedAt"> & { contacts?: string[] }): Promise<string> {
   const db = getDb();
   const now = new Date();
   const ref = await db.collection(JOBS).add({
@@ -140,7 +142,7 @@ export async function createJob(data: Omit<FirestoreJob, "id" | "createdAt" | "u
 
 export async function updateJob(
   id: string,
-  data: Partial<Pick<FirestoreJob, "status" | "notes" | "updatedAt">>
+  data: Partial<Pick<FirestoreJob, "status" | "notes" | "contacts" | "updatedAt">>
 ): Promise<void> {
   const db = getDb();
   await db.collection(JOBS).doc(id).update({
@@ -157,4 +159,43 @@ export async function createScrapeLog(source: string, jobsFound: number, errors:
     jobsFound,
     errors,
   });
+}
+
+const RESUMES = "resumes";
+
+function docToResume(id: string, data: Record<string, unknown>): FirestoreResume {
+  return {
+    id,
+    name: (data.name as string) ?? "",
+    storagePath: (data.storagePath as string) ?? "",
+    downloadUrl: (data.downloadUrl as string) ?? "",
+    extractedText: (data.extractedText as string) ?? "",
+    uploadedAt: toDate(data.uploadedAt) ?? new Date(),
+  };
+}
+
+export async function getResumes(): Promise<FirestoreResume[]> {
+  const db = getDb();
+  const snap = await db.collection(RESUMES).orderBy("uploadedAt", "desc").get();
+  return snap.docs.map((d) => docToResume(d.id, d.data()));
+}
+
+export async function getResumeById(id: string): Promise<FirestoreResume | null> {
+  const db = getDb();
+  const d = await db.collection(RESUMES).doc(id).get();
+  if (!d.exists) return null;
+  return docToResume(d.id, d.data() ?? {});
+}
+
+export async function createResume(
+  data: Omit<FirestoreResume, "id">
+): Promise<string> {
+  const db = getDb();
+  const ref = await db.collection(RESUMES).add({ ...data });
+  return ref.id;
+}
+
+export async function deleteResume(id: string): Promise<void> {
+  const db = getDb();
+  await db.collection(RESUMES).doc(id).delete();
 }

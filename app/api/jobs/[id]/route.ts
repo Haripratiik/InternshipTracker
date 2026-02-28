@@ -8,16 +8,17 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const { status, notes } = body as { status?: string; notes?: string };
+  const { status, notes, contacts } = body as { status?: string; notes?: string; contacts?: string[] };
 
   const existing = await getJobById(id);
   if (!existing) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const data: Partial<{ status: JobStatus; notes: string }> = {};
+  const data: Partial<{ status: JobStatus; notes: string; contacts: string[] }> = {};
   if (status) data.status = status as JobStatus;
   if (notes !== undefined) data.notes = notes;
+  if (contacts !== undefined) data.contacts = contacts;
 
   if (Object.keys(data).length > 0) await updateJob(id, data);
 

@@ -16,6 +16,9 @@ __pycache__/
 .env.local
 .env.*.local
 
+# Firebase service account keys
+*firebase-adminsdk*.json
+
 # Next.js
 .next/
 out/
