@@ -1,0 +1,8 @@
+export { scrapeGitHubRepos, testScraper as testScraperGitHub } from "./github-repos";
+export { scrapeSimplify, testScraper as testScraperSimplify } from "./simplify";
+export { scrapeLinkedIn, testScraper as testScraperLinkedIn } from "./linkedin";
+export { scrapeHandshake, testScraper as testScraperHandshake } from "./handshake";
+export { scrapeLevelsFyi, testScraper as testScraperLevelsFyi } from "./levels-fyi";
+export { scrapeIndeed, testScraper as testScraperIndeed } from "./indeed";
+export { scrapeCareerPages, testScraper as testScraperCareerPages } from "./career-pages";
+export { scrapeGoogleFallback, testScraper as testScraperGoogleFallback } from "./google-fallback";
