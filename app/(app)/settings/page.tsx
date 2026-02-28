@@ -22,6 +22,9 @@ export default function SettingsPage() {
   const [resumeName, setResumeName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [scraping, setScraping] = useState(false);
+  const [scrapeResult, setScrapeResult] = useState<string | null>(null);
+
   const [profile, setProfile] = useState<EditableProfile | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -39,6 +42,20 @@ export default function SettingsPage() {
       .then((data: EditableProfile) => setProfile(data))
       .catch(() => {});
   }, []);
+
+  async function handleScrape() {
+    setScraping(true);
+    setScrapeResult(null);
+    try {
+      const res = await fetch("/api/scrape", { method: "POST" });
+      const data = await res.json() as { totalNew?: number; errors?: string[] };
+      setScrapeResult(`Done — ${data.totalNew ?? 0} new jobs found.${data.errors?.length ? ` Errors: ${data.errors.join(", ")}` : ""}`);
+    } catch {
+      setScrapeResult("Scrape failed. Check Vercel logs.");
+    } finally {
+      setScraping(false);
+    }
+  }
 
   async function saveProfile() {
     if (!profile) return;
@@ -141,6 +158,23 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-muted-foreground">Resumes, cookies, and preferences.</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Manual Scrape</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Trigger an immediate job scrape. Normally runs automatically at 8am UTC daily.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button onClick={handleScrape} disabled={scraping} variant="secondary">
+            {scraping ? "Scraping…" : "Run Scrape Now"}
+          </Button>
+          {scrapeResult && (
+            <p className="text-xs text-muted-foreground">{scrapeResult}</p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
