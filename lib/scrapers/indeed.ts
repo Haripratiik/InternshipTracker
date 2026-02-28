@@ -4,12 +4,10 @@
  */
 import * as cheerio from "cheerio";
 import type { ParsedJob, ScraperResult } from "@/types";
-import { USER_PROFILE } from "@/lib/config/profile";
 import { checkVisaBlacklist, randomDelay, withRetry } from "./utils";
 import { dedupeByCompanyTitleUrl } from "./types";
 
 const BASE = "https://www.indeed.com";
-const SOURCE = "indeed";
 
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url, {
@@ -24,16 +22,13 @@ async function fetchHtml(url: string): Promise<string> {
 }
 
 function buildQueries(): string[] {
-  const roleQueries = USER_PROFILE.targetRoles.slice(0, 5).map((r) => encodeURIComponent(r));
-  const broadQueries = [
-    "machine+learning+intern",
+  // Keep to 4 queries max — each has a delay, too many = timeout on Vercel
+  return [
+    "quantitative+research+intern",
     "software+engineering+intern",
-    "physics+intern",
-    "research+intern",
-    "data+science+intern",
-    "computational+intern",
+    "machine+learning+intern",
+    "physics+research+intern",
   ];
-  return [...roleQueries, ...broadQueries];
 }
 
 export async function scrapeIndeed(): Promise<ScraperResult> {
@@ -42,7 +37,7 @@ export async function scrapeIndeed(): Promise<ScraperResult> {
   const queries = buildQueries();
 
   for (const q of queries) {
-    await randomDelay(2000, 8000);
+    await randomDelay(500, 1500);
     try {
       const url = `${BASE}/jobs?q=${q}`;
       const html = await withRetry(() => fetchHtml(url));
