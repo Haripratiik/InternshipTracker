@@ -43,6 +43,14 @@ export async function scoreJobRelevance(
   let score = 0;
   const reasons: string[] = [];
 
+  // ── PhD-only role detection (heavy penalty for undergrad applicant) ────
+  const phdTitle = /\bphd\b/i.test(title);
+  const phdDesc = /phd\s*(candidate|required|student|program|only)|doctoral\s*(candidate|student|intern)|currently\s*(enrolled|pursuing)\s*(in\s*)?a\s*phd/i.test(description);
+  if (phdTitle || phdDesc) {
+    score -= 50;
+    reasons.push("PhD required");
+  }
+
   // ── Intern signal ──────────────────────────────────────────────
   const internSignal = /intern|co-?op|new\s*grad|entry.?level|trainee|summer\s*(program|position|role)/.test(text);
   if (internSignal) {
