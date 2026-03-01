@@ -51,8 +51,8 @@ export async function scrapeTheMuse(): Promise<ScraperResult> {
 
   for (const { category, level } of QUERIES) {
     try {
-      // Fetch pages 1–3 per category (≈30 jobs per page)
-      for (let page = 1; page <= 3; page++) {
+      // Fetch page 1 per category (≈20 jobs) — keep total time low
+      for (let page = 1; page <= 1; page++) {
         const data = await fetchPage(category, level, page);
         const results = data.results ?? [];
         if (results.length === 0) break;

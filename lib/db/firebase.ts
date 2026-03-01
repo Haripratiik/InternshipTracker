@@ -140,6 +140,27 @@ export async function createJob(data: Omit<FirestoreJob, "id" | "createdAt" | "u
   return ref.id;
 }
 
+/** Batch-write up to 500 jobs in a single Firestore commit (much faster than sequential adds). */
+export async function batchCreateJobs(
+  jobs: (Omit<FirestoreJob, "id" | "createdAt" | "updatedAt"> & { contacts?: string[] })[]
+): Promise<number> {
+  if (jobs.length === 0) return 0;
+  const db = getDb();
+  const now = new Date();
+  // Firestore batch limit is 500 writes
+  const chunks: typeof jobs[] = [];
+  for (let i = 0; i < jobs.length; i += 500) chunks.push(jobs.slice(i, i + 500));
+  for (const chunk of chunks) {
+    const batch = db.batch();
+    for (const data of chunk) {
+      const ref = db.collection(JOBS).doc();
+      batch.set(ref, { ...data, contacts: data.contacts ?? [], createdAt: now, updatedAt: now });
+    }
+    await batch.commit();
+  }
+  return jobs.length;
+}
+
 export async function updateJob(
   id: string,
   data: Partial<Pick<FirestoreJob, "status" | "notes" | "contacts" | "updatedAt">>
