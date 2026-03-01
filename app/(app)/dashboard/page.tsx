@@ -27,14 +27,38 @@ export default function DiscoveryPage() {
   const [jobs, setJobs] = useState<FirestoreJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [tailorModal, setTailorModal] = useState<TailorModal | null>(null);
+  const [scraping, setScraping] = useState(false);
+  const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadJobs() {
+    setLoading(true);
     fetch("/api/jobs?threshold=60")
       .then((r) => r.json())
       .then((data: FirestoreJob[]) => setJobs(data))
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { loadJobs(); }, []);
+
+  async function handleScrape() {
+    setScraping(true);
+    setScrapeMsg(null);
+    try {
+      const res = await fetch("/api/scrape", { method: "POST" });
+      const text = await res.text();
+      if (!res.ok) { setScrapeMsg(`Error ${res.status}: ${text.slice(0, 200)}`); return; }
+      let data: { totalNew?: number; errors?: string[] };
+      try { data = JSON.parse(text) as { totalNew?: number; errors?: string[] }; }
+      catch { setScrapeMsg(`Bad response: ${text.slice(0, 200)}`); return; }
+      setScrapeMsg(`Done — ${data.totalNew ?? 0} new jobs found.${data.errors?.length ? ` Errors: ${data.errors.slice(0, 2).join(" | ")}` : ""}`);
+      if ((data.totalNew ?? 0) > 0) loadJobs(); // auto-refresh if new jobs
+    } catch (e) {
+      setScrapeMsg(`Failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setScraping(false);
+    }
+  }
 
   async function handleSave(id: string) {
     await fetch(`/api/jobs/${id}`, {
@@ -101,14 +125,22 @@ export default function DiscoveryPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Job Discovery</h1>
-        <p className="text-muted-foreground">Sorted by relevance. Showing score 60+</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Job Discovery</h1>
+          <p className="text-muted-foreground">Sorted by relevance. Showing score 60+</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <Button onClick={handleScrape} disabled={scraping} variant="secondary" size="sm">
+            {scraping ? "Scraping…" : "Run Scrape"}
+          </Button>
+          {scrapeMsg && <p className="text-xs text-muted-foreground max-w-xs text-right">{scrapeMsg}</p>}
+        </div>
       </div>
 
       {loading && <p className="text-muted-foreground">Loading jobs...</p>}
       {!loading && jobs.length === 0 && (
-        <p className="text-muted-foreground">No jobs yet. Trigger a scrape to populate the feed.</p>
+        <p className="text-muted-foreground">No jobs yet — click Run Scrape to populate the feed.</p>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getJobs, createJob, createScrapeLog } from "@/lib/db";
 import {
   scrapeGitHubRepos,
-  scrapeSimplify,
-  scrapeLevelsFyi,
+  scrapeSimplifyList,
+  scrapeTheMuse,
   scrapeIndeed,
 } from "@/lib/scrapers";
 import { scoreJobRelevance } from "@/lib/ai/relevance";
@@ -12,10 +12,14 @@ import type { JobStatus, ParsedJob } from "@/types";
 export const maxDuration = 60;
 
 const SCRAPERS = [
-  { name: "github_repo", fn: scrapeGitHubRepos },
-  { name: "simplify",    fn: scrapeSimplify },
-  { name: "levels_fyi",  fn: scrapeLevelsFyi },
-  { name: "indeed",      fn: scrapeIndeed },
+  // GitHub community markdown lists (SimplifyJobs repos) — very reliable
+  { name: "github_repo",   fn: scrapeGitHubRepos },
+  // SimplifyJobs raw JSON from GitHub — hundreds of verified internships
+  { name: "simplify",      fn: scrapeSimplifyList },
+  // The Muse public API — engineering/data/research internships, no key needed
+  { name: "the_muse",      fn: scrapeTheMuse },
+  // Indeed HTML scrape — fallback, may 403
+  { name: "indeed",        fn: scrapeIndeed },
 ] as const;
 
 export async function POST() {
@@ -26,7 +30,7 @@ export async function POST() {
   const existingJobs = await getJobs({}).catch(() => []);
   const existingUrls = new Set(existingJobs.map((j) => j.url));
 
-  // Run all scrapers in parallel instead of sequentially
+  // Run all scrapers in parallel
   const settled = await Promise.allSettled(
     SCRAPERS.map(({ name, fn }) =>
       fn()

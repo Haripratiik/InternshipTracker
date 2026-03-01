@@ -7,12 +7,11 @@ import { checkVisaBlacklist, randomDelay, withRetry } from "./utils";
 import { dedupeByCompanyTitleUrl } from "./types";
 
 const REPOS = [
-  { owner: "pittcsc", repo: "Summer2025-Internships", path: "README.md" },
+  { owner: "SimplifyJobs", repo: "Summer2026-Internships", path: "README.md" },
+  { owner: "SimplifyJobs", repo: "Summer2025-Internships", path: "README.md" },
   { owner: "SimplifyJobs", repo: "New-Grad-Positions", path: "README.md" },
-  { owner: "pittcsc", repo: "Summer2024-Internships", path: "README.md" },
 ];
 
-const SOURCE = "github_repo";
 
 function parseMarkdownTable(text: string): ParsedJob[] {
   const jobs: ParsedJob[] = [];
@@ -87,7 +86,7 @@ export async function scrapeGitHubRepos(): Promise<ScraperResult> {
   const errors: string[] = [];
 
   for (const { owner, repo, path } of REPOS) {
-    await randomDelay(2000, 8000);
+    await randomDelay(300, 800);
     try {
       const text = await withRetry(() => fetchReadme(owner, repo, path));
       const jobs = parseMarkdownTable(text);

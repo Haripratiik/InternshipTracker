@@ -6,3 +6,5 @@ export { scrapeLevelsFyi, testScraper as testScraperLevelsFyi } from "./levels-f
 export { scrapeIndeed, testScraper as testScraperIndeed } from "./indeed";
 export { scrapeCareerPages, testScraper as testScraperCareerPages } from "./career-pages";
 export { scrapeGoogleFallback, testScraper as testScraperGoogleFallback } from "./google-fallback";
+export { scrapeSimplifyList } from "./simplify-list";
+export { scrapeTheMuse } from "./the-muse";
